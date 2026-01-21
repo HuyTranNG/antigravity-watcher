@@ -43,7 +43,7 @@ bun run dev
 ## Output Example
 
 ```
-🚀 Antigravity Usage Fetcher
+🚀 Antigravity watcher Usage Fetcher
 ============================
 
 🔍 Scanning for Antigravity process...

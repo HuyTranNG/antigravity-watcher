@@ -1,5 +1,5 @@
 /**
- * Antigravity Usage Fetcher
+ * Antigravity watcher Usage Fetcher
  * Fetches quota/usage information from local Antigravity process
  */
 
@@ -7,7 +7,7 @@ import { ProcessHunter } from './hunter';
 import { ReactorCore } from './reactor';
 
 async function main() {
-  console.log('🚀 Antigravity Usage Fetcher');
+  console.log('🚀 Antigravity watcher Usage Fetcher');
   console.log('============================\n');
 
   // Step 1: Find Antigravity process

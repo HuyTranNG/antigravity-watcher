@@ -29,6 +29,7 @@ export interface ModelQuotaInfo {
 
 export interface QuotaGroup {
   groupName: string;
+  shortName: string;
   modelIds: string[];
   remainingFraction: number;
   resetTime: string;
@@ -160,6 +161,16 @@ export class ReactorCore {
     const userStatus = response.userStatus;
     const modelConfigs = userStatus?.cascadeModelConfigData?.clientModelConfigs || [];
 
+    const formatLocalTime = (isoString?: string) => {
+      if (!isoString) return '';
+      try {
+        const date = new Date(isoString);
+        return date.toLocaleString();
+      } catch {
+        return isoString || '';
+      }
+    };
+
     // Process each model's quota
     for (const config of modelConfigs) {
       const modelId = config.modelOrAlias?.model || '';
@@ -171,7 +182,7 @@ export class ReactorCore {
         modelId,
         displayName: config.label || modelId,
         remainingFraction: quotaInfo?.remainingFraction ?? 1,
-        resetTime: quotaInfo?.resetTime || '',
+        resetTime: formatLocalTime(quotaInfo?.resetTime),
         countdown: this.calculateCountdown(quotaInfo?.resetTime),
         capabilities: {
           supportsImages: config.supportsImages,
@@ -184,8 +195,66 @@ export class ReactorCore {
       });
     }
 
-    // Sort by remaining fraction (lowest first)
-    models.sort((a, b) => a.remainingFraction - b.remainingFraction);
+    // Sort models according to the order in the image
+    const MODEL_PRIORITY: Record<string, number> = {
+      "Gemini 3 Pro (High)": 1,
+      "Gemini 3 Pro (Low)": 2,
+      "Gemini 3 Flash": 3,
+      "Claude Sonnet 4.5": 4,
+      "Claude Sonnet 4.5 (Thinking)": 5,
+      "Claude Opus 4.5 (Thinking)": 6,
+      "GPT-OSS 120B (Medium)": 7,
+    };
+    const MODEL_GROUPS: Record<string, string[]> = {
+      "Gemini 3 Pro": ["Gemini 3 Pro (High)", "Gemini 3 Pro (Low)"],
+      "Gemini 3 Flash": ["Gemini 3 Flash"],
+      "Claude-GPT": ["Claude Sonnet 4.5", "Claude Sonnet 4.5 (Thinking)", "Claude Opus 4.5 (Thinking)", "GPT-OSS 120B (Medium)"],
+    };
+    const GROUP_SHORT_NAMES: Record<string, string> = {
+      "Gemini 3 Pro": "G3P",
+      "Gemini 3 Flash": "G3F",
+      "Claude-GPT": "CG",
+    };
+
+    models.sort((a, b) => {
+      const pA = MODEL_PRIORITY[a.displayName] || 999;
+      const pB = MODEL_PRIORITY[b.displayName] || 999;
+      return pA - pB;
+    });
+
+    // Group models using MODEL_GROUPS
+    const groups: QuotaGroup[] = [];
+    const processedModelIds = new Set<string>();
+
+    for (const [groupName, modelNames] of Object.entries(MODEL_GROUPS)) {
+      const groupedModels = models.filter(m => modelNames.includes(m.displayName));
+      if (groupedModels.length > 0) {
+        const first = groupedModels[0];
+        groups.push({
+          groupName,
+          shortName: GROUP_SHORT_NAMES[groupName] || groupName,
+          modelIds: groupedModels.map(m => m.modelId),
+          remainingFraction: first.remainingFraction,
+          resetTime: first.resetTime,
+          countdown: first.countdown,
+        });
+        groupedModels.forEach(m => processedModelIds.add(m.modelId));
+      }
+    }
+
+    // Handle models not in any defined group
+    for (const m of models) {
+      if (!processedModelIds.has(m.modelId)) {
+        groups.push({
+          groupName: m.displayName,
+          shortName: m.displayName,
+          modelIds: [m.modelId],
+          remainingFraction: m.remainingFraction,
+          resetTime: m.resetTime,
+          countdown: m.countdown,
+        });
+      }
+    }
 
     return {
       userInfo: userStatus ? {
@@ -194,6 +263,7 @@ export class ReactorCore {
         userId: userStatus.planStatus?.planInfo?.teamsTier,
       } : undefined,
       models,
+      groups,
       fetchedAt: Date.now(),
     };
   }

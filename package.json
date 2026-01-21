@@ -4,21 +4,61 @@
   "version": "1.0.0",
   "description": "Fetch Antigravity usage and quota information",
   "publisher": "antigravity",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HuyTranNG/antigravity-watcher.git"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "antigravity-watcher.checkQuota",
-        "title": "Antigravity: Check Quota"
+        "title": "Antigravity watcher: Check Quota"
+      },
+      {
+        "command": "antigravity-watcher.openSettings",
+        "title": "Antigravity watcher: Open Settings"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Antigravity Watcher",
+      "properties": {
+        "antigravity-watcher.refreshInterval": {
+          "type": "integer",
+          "default": 2,
+          "description": "Refresh interval in minutes for the status bar and quota info."
+        },
+        "antigravity-watcher.thresholds": {
+          "type": "object",
+          "default": {
+            "high": 0.8,
+            "medium": 0.3,
+            "low": 0.05
+          },
+          "description": "Remaining fraction thresholds for status levels."
+        },
+        "antigravity-watcher.icons": {
+          "type": "object",
+          "default": {
+            "high": "🟢",
+            "medium": "🟡",
+            "low": "🟠",
+            "critical": "🔴"
+          },
+          "description": "Icons representing different remaining fraction levels."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
