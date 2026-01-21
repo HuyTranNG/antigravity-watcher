@@ -6,6 +6,7 @@ bun.lockb
 # Build output
 dist/
 build/
+out/
 *.tsbuildinfo
 
 # Environment variables
@@ -26,7 +27,6 @@ bun-error.log*
 Thumbs.db
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
