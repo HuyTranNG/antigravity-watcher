@@ -1,9 +1,19 @@
 import * as vscode from 'vscode';
 import { ProcessHunter } from './hunter';
 import { ReactorCore } from './reactor';
+import { ChartViewProvider } from './chartView';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('Antigravity Watcher is now active!');
+
+  // Register chart view provider
+  const chartViewProvider = new ChartViewProvider(context.extensionUri);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      ChartViewProvider.viewType,
+      chartViewProvider
+    )
+  );
 
   let disposable = vscode.commands.registerCommand('antigravity-watcher.checkQuota', async () => {
     await updateStatusBar();

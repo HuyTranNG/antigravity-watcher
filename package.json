@@ -3,7 +3,7 @@
   "displayName": "Antigravity Watcher",
   "version": "1.0.0",
   "description": "Fetch Antigravity usage and quota information",
-  "publisher": "antigravity",
+  "publisher": "HTNG",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -58,6 +58,25 @@
           "description": "Icons representing different remaining fraction levels."
         }
       }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "antigravity-watcher",
+          "title": "Antigravity Watcher",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "antigravity-watcher": [
+        {
+          "type": "webview",
+          "id": "antigravity-watcher.chartView",
+          "name": "Quota Charts",
+          "icon": "resources/icon.svg"
+        }
+      ]
     }
   },
   "scripts": {
