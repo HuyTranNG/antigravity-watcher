@@ -3,7 +3,14 @@
  * Finds the Antigravity language server process and extracts connection info
  */
 
-import { $ } from 'bun';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export interface ProcessInfo {
   pid: number;
@@ -53,7 +60,7 @@ export class ProcessHunter {
       }
 
       if (i < maxAttempts - 1) {
-        await Bun.sleep(1000); // Wait 1 second before retry
+        await sleep(1000); // Wait 1 second before retry
       }
     }
 
@@ -94,7 +101,7 @@ export class ProcessHunter {
 
   private async identifyWindowsPorts(pid: number): Promise<number[]> {
     try {
-      const result = await $`powershell -NoProfile -Command "Get-NetTCPConnection -State Listen -OwningProcess ${pid} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty LocalPort | Sort-Object -Unique"`.text();
+      const { stdout: result } = await execAsync(`powershell -NoProfile -Command "Get-NetTCPConnection -State Listen -OwningProcess ${pid} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty LocalPort | Sort-Object -Unique"`);
       
       const ports = new Set<number>();
       const matches = result.match(/\b\d{1,5}\b/g) || [];
@@ -117,11 +124,11 @@ export class ProcessHunter {
     try {
       // Try lsof first
       try {
-        const result = await $`lsof -Pan -p ${pid} -i`.text();
+        const { stdout: result } = await execAsync(`lsof -Pan -p ${pid} -i`);
         return this.parseUnixPorts(result);
       } catch {
         // Fall back to ss
-        const result = await $`ss -tlnp`.text();
+        const { stdout: result } = await execAsync(`ss -tlnp`);
         return this.parseUnixPortsFromSs(result, pid);
       }
     } catch (error) {
@@ -229,7 +236,7 @@ export class ProcessHunter {
     const cmd = `powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter 'name=''${this.targetProcess}''' | Select-Object ProcessId,CommandLine | ConvertTo-Json"`;
     
     try {
-      const result = await $`powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter 'name=''${this.targetProcess}''' | Select-Object ProcessId,CommandLine | ConvertTo-Json"`.text();
+      const { stdout: result } = await execAsync(`powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter 'name=''${this.targetProcess}''' | Select-Object ProcessId,CommandLine | ConvertTo-Json"`);
       
       return this.parseWindowsOutput(result);
     } catch (error) {
@@ -241,7 +248,7 @@ export class ProcessHunter {
   private async findUnixProcesses(): Promise<ProcessInfo[]> {
     try {
       // Use ps to find the process
-      const result = await $`ps aux`.text();
+      const { stdout: result } = await execAsync(`ps aux`);
       const lines = result.split('\n');
       const candidates: ProcessInfo[] = [];
 

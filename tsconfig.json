@@ -1,24 +1,19 @@
 {
     "compilerOptions": {
+        "module": "NodeNext",
+        "target": "ES2022",
+        "outDir": "out",
         "lib": [
-            "ESNext"
+            "ES2022"
         ],
-        "module": "esnext",
-        "target": "esnext",
-        "moduleResolution": "bundler",
-        "moduleDetection": "force",
-        "allowImportingTsExtensions": true,
-        "noEmit": true,
-        "composite": true,
+        "sourceMap": true,
+        "rootDir": "src",
         "strict": true,
-        "downlevelIteration": true,
-        "skipLibCheck": true,
-        "jsx": "preserve",
-        "allowSyntheticDefaultImports": true,
-        "forceConsistentCasingInFileNames": true,
-        "allowJs": true,
-        "types": [
-            "bun-types"
-        ]
-    }
+        "esModuleInterop": true,
+        "moduleResolution": "NodeNext"
+    },
+    "exclude": [
+        "node_modules",
+        ".vscode-test"
+    ]
 }
