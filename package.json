@@ -3,7 +3,7 @@
   "displayName": "Antigravity Watcher",
   "version": "1.0.0",
   "description": "Fetch Antigravity usage and quota information",
-  "publisher": "HTNG",
+  "publisher": "htng-dev",
   "license": "MIT",
   "repository": {
     "type": "git",

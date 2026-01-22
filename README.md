@@ -1,185 +1,121 @@
-# Antigravity Watcher
+# 🚀 Antigravity Watcher
 
-A VS Code extension to monitor Antigravity AI usage and quota information in real-time.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![VS Code](https://img.shields.io/badge/VS%20Code-v1.80.0+-blue.svg)](https://code.visualstudio.com/)
+[![Open VSX](https://img.shields.io/open-vsx/v/htng-dev/antigravity-watcher.svg)](https://open-vsx.org/extension/htng-dev/antigravity-watcher)
+[![Pure TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 
-## Features
+**Keep your flow, know your limits.** Antigravity Watcher is a premium VS Code extension designed to provide real-time monitoring of your Antigravity AI quotas and usage, directly within your favorite editor.
 
-- 🔍 **Auto-discovery**: Automatically finds the running Antigravity language server process
-- 📊 **Quota Tracking**: Fetches real-time quota information for all available models
-- 📈 **Activity Bar Charts**: Visual charts showing usage and reset times in the activity bar
-- 🎯 **Status Bar Integration**: Quick glance at quota status with color-coded indicators
-- 🤖 **Model Details**: Shows model capabilities (images, video, thinking support)
-- 📦 **Quota Groups**: Displays grouped quotas for models sharing the same pool
-- 🔄 **Auto-refresh**: Configurable automatic updates every 2 minutes (default)
+![Antigravity Watcher Preview](resources/screenshots/extension_preview.png)
 
-## How It Works
+## ✨ Features
 
-This tool is based on the [vscode-antigravity-cockpit](https://github.com/jlcodes99/vscode-antigravity-cockpit) extension and works by:
+### 📊 Rich Visualizations
+Stay on top of your usage with beautiful, real-time charts in the Activity Bar. Monitor multiple model groups (Gemini, Claude, GPT, Mistral) with smooth gradients and glassmorphism-inspired UI.
 
-1. **Process Discovery**: Scans system processes to find the Antigravity language server
-2. **Connection Extraction**: Extracts the local API port and CSRF token from the process
-3. **API Communication**: Connects to the local Antigravity API to fetch quota data
+### 🎯 Proactive Monitoring
+*   **Status Bar Integration**: Get a quick heart-beat check of your primary quotas at a glance.
+*   **Color-Coded Health**: Instant visual feedback (🟢 Healthy, 🟡 Warning, 🟠 Low, 🔴 Critical).
+*   **Precise Countdown**: Know exactly when your quotas will reset, down to the minute.
 
-## Prerequisites
+### 🤖 Intelligent Automation
+*   **Zero-Config Discovery**: Automatically finds your running Antigravity instance—no manual port input or API key configuration needed.
+*   **Smart Grouping**: Automatically groups models that share common tokens or request pools.
+*   **Auto-Update**: Background refresh keeps data fresh without interrupting your coding sessions.
 
-- Visual Studio Code (version 1.80.0 or higher)
-- Antigravity application running locally
+## 📸 Screenshots
 
-## Installation
+### Status Bar Glance
+![Status Bar Preview](resources/screenshots/status_bar_preview.png)
+*Quickly monitor your most-used models without leaving your code.*
 
-### From VSIX File
+---
 
+## 🚀 Getting Started
+
+### Prerequisites
+- [Visual Studio Code](https://code.visualstudio.com/) v1.80.0 or higher.
+- [Antigravity](https://github.com/jlcodes99/vscode-antigravity-cockpit) application running on your local machine.
+
+### Installation
+
+#### From the Extension Tab (Recommended)
+1. Open VS Code and go to the **Extensions** view (`Ctrl+Shift+X`).
+2. Search for **"Antigravity Watcher"**.
+3. Click **Install**.
+
+Alternatively, find it on [Open VSX Registry](https://open-vsx.org/extension/htng-dev/antigravity-watcher).
+
+#### Direct Download
+Install the `.vsix` package directly from the repository:
 ```bash
-# Install the extension from the .vsix file
 code --install-extension antigravity-watcher-1.0.0.vsix
 ```
 
-### From Source
-
+#### Build from Source
 ```bash
-# Install dependencies
+git clone https://github.com/HuyTranNG/antigravity-watcher.git
+cd antigravity-watcher
 npm install
-
-# Compile the extension
 npm run compile
-
-# Package the extension (optional)
-vsce package
 ```
 
-## Usage
+---
 
-### Activity Bar Charts
+## 🛠️ Usage
 
-1. Click on the **Antigravity Watcher** icon in the activity bar (left sidebar)
-2. View real-time quota usage charts for all model groups
-3. See reset times and countdowns for each quota
-4. Click the **Refresh** button to manually update the data
+### 1. The Activity Bar
+Click the **Antigravity icon** in the Activity Bar to open the primary dashboard. Here you'll see:
+- Detailed usage percentages per model group.
+- Visual bar charts with dynamic color states.
+- Precise reset timestamps and countdown badges.
 
-### Status Bar
+### 2. The Status Bar
+Check the bottom-right of your editor for immediate status updates.
+- **Click** the status item to trigger a manual refresh or see detailed info.
 
-- The status bar (bottom) shows a quick summary of your quotas
-- Color-coded indicators show quota health:
-  - 🟢 Green: Healthy (>80% remaining)
-  - 🟡 Yellow: Medium (30-80% remaining)
-  - 🟠 Orange: Low (5-30% remaining)
-  - 🔴 Red: Critical (<5% remaining)
-- Click the status bar item to see detailed quota information
+### 3. Command Palette
+Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) and type:
+- `Antigravity watcher: Check Quota` - Forces a manual data fetch.
+- `Antigravity watcher: Open Settings` - Configure thresholds and refresh rates.
 
-### Commands
+---
 
-- **Antigravity watcher: Check Quota** - Manually check and display quota information
-- **Antigravity watcher: Open Settings** - Open extension settings
+## ⚙️ Configuration
 
-### Configuration
+| Setting | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `refreshInterval` | `integer` | `2` | Update frequency in minutes. |
+| `thresholds.high` | `number` | `0.8` | Threshold for Green (Healthy). |
+| `thresholds.medium`| `number` | `0.3` | Threshold for Yellow (Warning). |
+| `thresholds.low` | `number` | `0.05`| Threshold for Orange (Low). |
+| `icons` | `object` | 🟢, 🟡, 🟠... | Custom emoji/icons for each status level. |
 
-Open VS Code settings and search for "Antigravity Watcher" to configure:
+---
 
-- **Refresh Interval**: How often to update quota data (default: 2 minutes)
-- **Thresholds**: Customize the percentage thresholds for different status levels
-- **Icons**: Customize the icons used for different quota levels
+## 📂 Project Structure
 
-## Output Example
+- `src/extension.ts` - Core activation logic.
+- `src/chartView.ts` - Webview provider for the Activity Bar dashboard.
+- `src/hunter.ts` - Advanced process discovery engine.
+- `src/reactor.ts` - Antigravity API communication layer.
+- `resources/` - Visual assets and extension icons.
 
-```
-🚀 Antigravity watcher Usage Fetcher
-============================
+---
 
-🔍 Scanning for Antigravity process...
-✅ Found Antigravity process:
-   Port: 42100
-   PID: 12345
+## 🆘 Troubleshooting
 
-🔌 Connecting to Antigravity API...
-✅ Successfully fetched quota data
+**"Antigravity not found"**
+1. Ensure the Antigravity application is active and running.
+2. Verify you have permissions to view running processes (especially on Linux/macOS).
+3. Check the VS Code "Output" panel for detailed logs under "Antigravity Watcher".
 
-📊 Quota Information:
-====================
+---
 
-👤 User Info:
-   Email: user@example.com
-   Tier: Premium
-   User ID: abc123
+## 📜 Credits & License
 
-🤖 Model Quotas:
+Built with ❤️ by [htng-dev](https://github.com/HuyTranNG).
+Based on the original [vscode-antigravity-cockpit](https://github.com/jlcodes99/vscode-antigravity-cockpit).
 
-1. Claude Sonnet 4.5
-   Model ID: MODEL_CLAUDE_4_5_SONNET
-   Remaining: 85.50%
-   Reset Time: 2026-01-21T12:00:00Z
-   Countdown: 14h 15m
-   Capabilities: Images
-
-2. GPT-4 Turbo
-   Model ID: MODEL_GPT_4_TURBO
-   Remaining: 92.30%
-   Reset Time: 2026-01-21T12:00:00Z
-   Countdown: 14h 15m
-```
-
-## Project Structure
-
-```
-antigravity-watcher/
-├── src/
-│   ├── extension.ts   # Extension activation and commands
-│   ├── chartView.ts   # Activity bar chart view provider
-│   ├── hunter.ts      # Process discovery logic
-│   ├── reactor.ts     # API communication
-│   └── index.ts       # CLI entry point (optional)
-├── resources/
-│   └── icon.svg       # Activity bar icon
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-## API Reference
-
-### ProcessHunter
-
-Finds the Antigravity language server process.
-
-```typescript
-const hunter = new ProcessHunter();
-const result = await hunter.scanEnvironment(maxAttempts);
-```
-
-### ReactorCore
-
-Communicates with the Antigravity API.
-
-```typescript
-const reactor = new ReactorCore();
-reactor.engage(port, csrfToken);
-const snapshot = await reactor.fetchQuotaSnapshot();
-```
-
-## Platform Support
-
-- ✅ **Linux**: Fully supported
-- ✅ **macOS**: Fully supported (both Intel and Apple Silicon)
-- ✅ **Windows**: Fully supported (requires PowerShell)
-
-## Troubleshooting
-
-### "Failed to find Antigravity process"
-
-Make sure:
-- Antigravity application is running
-- The language server process is active
-- You have permission to list system processes
-
-### Windows-specific Issues
-
-On Windows, you may need to:
-- Run PowerShell with appropriate execution policy
-- Ensure WMI service is running: `net start winmgmt`
-
-## Credits
-
-Based on the excellent [vscode-antigravity-cockpit](https://github.com/jlcodes99/vscode-antigravity-cockpit) by [jlcodes99](https://github.com/jlcodes99).
-
-## License
-
-MIT
+Distributed under the **MIT License**. See `LICENSE` for more information.
