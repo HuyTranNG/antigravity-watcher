@@ -40,18 +40,21 @@ Stay on top of your usage with beautiful, real-time charts in the Activity Bar. 
 
 ### Installation
 
-#### From the Extension Tab (Recommended)
+#### 🛠️ Using Antigravity CLI (Recommended)
+You can install **Antigravity Watcher** directly using the Antigravity command line:
+```bash
+antigravity --install-extension htng-dev.antigravity-watcher
+```
+
+#### 🧩 From the Antigravity Extension
+If you are already using the [Antigravity](https://github.com/jlcodes99/vscode-antigravity-cockpit) extension, you can find and install the **Watcher** directly from within the Antigravity interface.
+
+#### 🏪 From the VS Code Marketplace
 1. Open VS Code and go to the **Extensions** view (`Ctrl+Shift+X`).
 2. Search for **"Antigravity Watcher"**.
 3. Click **Install**.
 
-Alternatively, find it on [Open VSX Registry](https://open-vsx.org/extension/htng-dev/antigravity-watcher).
-
-#### Direct Download
-Install the `.vsix` package directly from the repository:
-```bash
-code --install-extension antigravity-watcher-1.0.0.vsix
-```
+Alternatively, find it on the [Open VSX Registry](https://open-vsx.org/extension/htng-dev/antigravity-watcher).
 
 #### Build from Source
 ```bash
