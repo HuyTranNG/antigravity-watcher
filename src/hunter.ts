@@ -5,6 +5,8 @@
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as https from 'https';
+import { IncomingMessage } from 'http';
 
 const execAsync = promisify(exec);
 
@@ -186,7 +188,6 @@ export class ProcessHunter {
 
   private async pingPort(port: number, token: string): Promise<boolean> {
     return new Promise((resolve) => {
-      const https = require('https');
       
       const options = {
         hostname: '127.0.0.1',
@@ -205,7 +206,7 @@ export class ProcessHunter {
         }),
       };
 
-      const req = https.request(options, (res: any) => {
+      const req = https.request(options, (res: IncomingMessage) => {
         // Accept 200 or 404 as valid (404 means server is responding, just wrong endpoint)
         // We'll use the actual endpoint in the reactor
         resolve(res.statusCode === 200 || res.statusCode === 404);

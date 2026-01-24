@@ -1,3 +1,6 @@
+import * as https from 'https';
+import { IncomingMessage } from 'http';
+
 /**
  * Reactor Core
  * Communicates with Antigravity API to fetch quota data
@@ -24,6 +27,7 @@ export interface ModelQuotaInfo {
   remainingFraction: number;
   resetTime: string;
   countdown?: string;
+  isExhausted: boolean;
   capabilities?: ModelCapabilities;
 }
 
@@ -34,6 +38,7 @@ export interface QuotaGroup {
   remainingFraction: number;
   resetTime: string;
   countdown?: string;
+  isExhausted: boolean;
 }
 
 export interface QuotaSnapshot {
@@ -104,7 +109,6 @@ export class ReactorCore {
     }
 
     return new Promise((resolve, reject) => {
-      const https = require('https');
       const data = JSON.stringify(payload);
 
       const options = {
@@ -125,9 +129,9 @@ export class ReactorCore {
         }),
       };
 
-      const req = https.request(options, (res: any) => {
+      const req = https.request(options, (res: IncomingMessage) => {
         let body = '';
-        res.on('data', (chunk: any) => (body += chunk));
+        res.on('data', (chunk: Buffer | string) => (body += chunk));
         res.on('end', () => {
           if (!body || body.trim().length === 0) {
             reject(new Error('Empty response from server'));
@@ -142,7 +146,7 @@ export class ReactorCore {
         });
       });
 
-      req.on('error', (error: any) => {
+      req.on('error', (error: Error) => {
         reject(new Error(`Connection failed: ${error.message}`));
       });
 
@@ -181,9 +185,10 @@ export class ReactorCore {
       models.push({
         modelId,
         displayName: config.label || modelId,
-        remainingFraction: quotaInfo?.remainingFraction ?? 1,
+        remainingFraction: quotaInfo?.remainingFraction ?? 0,
         resetTime: formatLocalTime(quotaInfo?.resetTime),
         countdown: this.calculateCountdown(quotaInfo?.resetTime),
+        isExhausted: (quotaInfo?.remainingFraction ?? 0) === 0,
         capabilities: {
           supportsImages: config.supportsImages,
           supportsVideo: config.supportsVideo,
@@ -237,6 +242,7 @@ export class ReactorCore {
           remainingFraction: first.remainingFraction,
           resetTime: first.resetTime,
           countdown: first.countdown,
+          isExhausted: first.isExhausted,
         });
         groupedModels.forEach(m => processedModelIds.add(m.modelId));
       }
@@ -252,6 +258,7 @@ export class ReactorCore {
           remainingFraction: m.remainingFraction,
           resetTime: m.resetTime,
           countdown: m.countdown,
+          isExhausted: m.isExhausted,
         });
       }
     }

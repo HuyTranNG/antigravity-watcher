@@ -3,6 +3,21 @@ import { ProcessHunter } from './hunter';
 import { ReactorCore } from './reactor';
 import { ChartViewProvider } from './chartView';
 
+interface QuotaThresholds {
+  high: number;
+  medium: number;
+  low: number;
+  exhausted: number;
+}
+
+interface QuotaIcons {
+  high: string;
+  medium: string;
+  low: string;
+  critical: string;
+  exhausted: string;
+}
+
 export function activate(context: vscode.ExtensionContext) {
   console.log('Antigravity Watcher is now active!');
 
@@ -82,9 +97,10 @@ export function activate(context: vscode.ExtensionContext) {
   // Helper to get status icon from settings
   function getStatusIcon(fraction: number): string {
     const config = vscode.workspace.getConfiguration('antigravity-watcher');
-    const thresholds = config.get<any>('thresholds') || { high: 0.8, medium: 0.3, low: 0.05 };
-    const icons = config.get<any>('icons') || { high: '🟢', medium: '🟡', low: '🟠', critical: '🔴' };
+    const thresholds = config.get<QuotaThresholds>('thresholds') || { high: 0.8, medium: 0.3, low: 0.05, exhausted: 0 };
+    const icons = config.get<QuotaIcons>('icons') || { high: '🟢', medium: '🟡', low: '🟠', critical: '🔴', exhausted: '⚠️' };
 
+    if (fraction <= (thresholds.exhausted ?? 0)) return icons.exhausted ?? '⚠️';
     if (fraction > (thresholds.high ?? 0.8)) return icons.high ?? '🟢';
     if (fraction > (thresholds.medium ?? 0.3)) return icons.medium ?? '🟡';
     if (fraction > (thresholds.low ?? 0.05)) return icons.low ?? '🟠';
@@ -113,17 +129,13 @@ export function activate(context: vscode.ExtensionContext) {
           .map(g => `${getStatusIcon(g.remainingFraction)} ${g.shortName}`)
           .join('  ');
           
+        const anyExhausted = snapshot.groups.some(g => g.isExhausted);
         const minFraction = Math.min(...snapshot.groups.map(g => g.remainingFraction));
         const config = vscode.workspace.getConfiguration('antigravity-watcher');
-        const thresholds = config.get<any>('thresholds') || { high: 0.8, medium: 0.3, low: 0.05 };
+        const thresholds = config.get<QuotaThresholds>('thresholds') || { high: 0.8, medium: 0.3, low: 0.05, exhausted: 0 };
 
-        if (minFraction < (thresholds.low ?? 0.05)) {
-          statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-        } else if (minFraction < (thresholds.medium ?? 0.3)) {
-          statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-        } else {
-          statusBarItem.backgroundColor = undefined;
-        }
+        statusBarItem.backgroundColor = undefined;
+
 
         statusBarItem.tooltip = 'Antigravity Quotas:\n' + snapshot.groups
           .map(g => `${g.groupName}: ${(g.remainingFraction * 100).toFixed(1)}%`)

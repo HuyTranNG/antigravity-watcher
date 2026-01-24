@@ -2,6 +2,21 @@ import * as vscode from 'vscode';
 import { ProcessHunter } from './hunter';
 import { ReactorCore, QuotaSnapshot } from './reactor';
 
+interface WebviewMessage {
+  type: string;
+  [key: string]: any;
+}
+
+interface QuotaChartData {
+  name: string;
+  shortName: string;
+  remaining: number;
+  used: number;
+  resetTime: string;
+  countdown: string;
+  isExhausted: boolean;
+}
+
 export class ChartViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'antigravity-watcher.chartView';
   private _view?: vscode.WebviewView;
@@ -31,7 +46,7 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
     this.startAutoRefresh();
 
     // Handle messages from the webview
-    webviewView.webview.onDidReceiveMessage(async (data) => {
+    webviewView.webview.onDidReceiveMessage(async (data: WebviewMessage) => {
       switch (data.type) {
         case 'refresh':
           await this.updateView();
@@ -188,13 +203,14 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
     const groups = snapshot.groups || [];
     
     // Prepare chart data
-    const chartData = groups.map(g => ({
+    const chartData: QuotaChartData[] = groups.map(g => ({
       name: g.groupName,
       shortName: g.shortName,
       remaining: g.remainingFraction * 100,
       used: (1 - g.remainingFraction) * 100,
       resetTime: g.resetTime,
-      countdown: g.countdown || 'N/A'
+      countdown: g.countdown || 'N/A',
+      isExhausted: g.isExhausted
     }));
 
     return `<!DOCTYPE html>
@@ -268,6 +284,8 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
         .percentage-high { color: #4caf50; }
         .percentage-medium { color: #ff9800; }
         .percentage-low { color: #f44336; }
+        .percentage-exhausted { color: #f44336; font-weight: 700; }
+
         .chart-container {
           margin: 12px 0;
         }
@@ -287,6 +305,7 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
         .bar-high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
         .bar-medium { background: linear-gradient(90deg, #ff9800, #ffa726); }
         .bar-low { background: linear-gradient(90deg, #f44336, #ef5350); }
+        .bar-exhausted { background: #444444; }
         .reset-info {
           margin-top: 8px;
           padding: 8px;
@@ -332,16 +351,19 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
 
       <div class="quota-groups">
         ${chartData.map(data => {
-          const percentageClass = data.remaining > 50 ? 'percentage-high' : 
+          const percentageClass = data.isExhausted ? 'percentage-exhausted' :
+                                  data.remaining > 50 ? 'percentage-high' : 
                                   data.remaining > 20 ? 'percentage-medium' : 'percentage-low';
-          const barClass = data.remaining > 50 ? 'bar-high' : 
+          const barClass = data.isExhausted ? 'bar-exhausted' :
+                          data.remaining > 50 ? 'bar-high' : 
                           data.remaining > 20 ? 'bar-medium' : 'bar-low';
+          const displayPercentage = data.isExhausted ? 'OUT OF QUOTA' : data.remaining.toFixed(1) + '%';
           
           return `
             <div class="quota-group">
               <div class="group-header">
                 <div class="group-name">${data.name}</div>
-                <div class="group-percentage ${percentageClass}">${data.remaining.toFixed(1)}%</div>
+                <div class="group-percentage ${percentageClass}">${displayPercentage}</div>
               </div>
               <div class="chart-container">
                 <div class="bar-chart">

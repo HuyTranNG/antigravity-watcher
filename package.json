@@ -43,7 +43,8 @@
           "default": {
             "high": 0.8,
             "medium": 0.3,
-            "low": 0.05
+            "low": 0.05,
+            "exhausted": 0
           },
           "description": "Remaining fraction thresholds for status levels."
         },
@@ -53,7 +54,8 @@
             "high": "🟢",
             "medium": "🟡",
             "low": "🟠",
-            "critical": "🔴"
+            "critical": "🔴",
+            "exhausted": "⚠️"
           },
           "description": "Icons representing different remaining fraction levels."
         }
@@ -87,7 +89,8 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "start": "bun run src/index.ts",
-    "dev": "bun --watch src/index.ts"
+    "dev": "bun --watch src/index.ts",
+    "build-extension": "vsce package"
   },
   "dependencies": {},
   "devDependencies": {
