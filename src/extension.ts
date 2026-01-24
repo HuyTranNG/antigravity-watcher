@@ -31,47 +31,54 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   let disposable = vscode.commands.registerCommand('antigravity-watcher.checkQuota', async () => {
-    await updateStatusBar();
-    
-    // Still show the detailed message when clicked
-    const hunter = new ProcessHunter();
-    const scanResult = await hunter.scanEnvironment(3);
-
-    if (!scanResult) {
-      vscode.window.showErrorMessage('Failed to find Antigravity process. Make sure Antigravity is running.');
-      return;
-    }
-
-    const reactor = new ReactorCore();
-    reactor.engage(scanResult.connectPort, scanResult.csrfToken);
-
     try {
-      const snapshot = await reactor.fetchQuotaSnapshot();
+      await updateStatusBar();
       
-      let displayItems: string[] = [];
+      const hunter = new ProcessHunter();
+      const scanResults = await hunter.scanEnvironment(3);
 
-      if (snapshot.groups && snapshot.groups.length > 0) {
-        displayItems = snapshot.groups.map(g => {
-          const remaining = (g.remainingFraction * 100).toFixed(1);
-          // Get models in this group that actually exist in snapshot.models
-          const modelsInGroup = snapshot.models
-            .filter(m => g.modelIds.includes(m.modelId))
-            .map(m => m.displayName)
-            .join(', ');
-          
-          return `【${g.groupName}】\nModels: ${modelsInGroup}\nRemaining: ${remaining}%\nResets: ${g.resetTime}\n`;
-        });
-      } else {
-        displayItems = snapshot.models.map(m => {
-          const remaining = (m.remainingFraction * 100).toFixed(1);
-          return `${m.displayName}: ${remaining}% remaining (Resets: ${m.resetTime})`;
-        });
+      if (scanResults.length === 0) {
+        vscode.window.showErrorMessage('Failed to find any Antigravity process. Make sure Antigravity is running.');
+        return;
       }
 
-      const detail = displayItems.join('\n');
+      const allItems: string[] = [];
+
+      for (const scanResult of scanResults) {
+        const reactor = new ReactorCore();
+        reactor.engage(scanResult.connectPort, scanResult.csrfToken);
+
+        try {
+          const snapshot = await reactor.fetchQuotaSnapshot();
+          const accountHeader = `--- Account: ${snapshot.userInfo?.email || 'Unknown'} (${snapshot.userInfo?.tier || 'Standard'}) ---`;
+          allItems.push(accountHeader);
+
+          let displayItems: string[] = [];
+
+          if (snapshot.groups && snapshot.groups.length > 0) {
+            displayItems = snapshot.groups.map(g => {
+              const remaining = (g.remainingFraction * 100).toFixed(1);
+              return `【${g.groupName}】\nRemaining: ${remaining}%\nResets: ${g.resetTime}\n`;
+            });
+          } else {
+            displayItems = snapshot.models.map(m => {
+              const remaining = (m.remainingFraction * 100).toFixed(1);
+              return `${m.displayName}: ${remaining}% remaining (Resets: ${m.resetTime})`;
+            });
+          }
+
+          allItems.push(...displayItems);
+          allItems.push('\n');
+
+        } catch (error) {
+          allItems.push(`Failed to fetch quota data for an account: ${error}`);
+        }
+      }
+
+      const detail = allItems.join('\n');
       
       vscode.window.showInformationMessage(
-        `Antigravity watcher Quota: ${snapshot.userInfo?.email || 'User'}`,
+        `Antigravity watcher Quota (Found ${scanResults.length} accounts)`,
         { modal: true, detail }
       );
 
@@ -110,46 +117,101 @@ export function activate(context: vscode.ExtensionContext) {
   // Function to update status bar
   async function updateStatusBar() {
     const hunter = new ProcessHunter();
-    const scanResult = await hunter.scanEnvironment(1);
+    const scanResults = await hunter.scanEnvironment(1);
 
-    if (!scanResult) {
+    if (scanResults.length === 0) {
       statusBarItem.text = '$(circle-slash) Antigravity watcher';
       statusBarItem.tooltip = 'Antigravity not found';
       statusBarItem.backgroundColor = undefined;
+      chartViewProvider.setBadge(undefined);
       return;
     }
 
-    const reactor = new ReactorCore();
-    reactor.engage(scanResult.connectPort, scanResult.csrfToken);
+    const statusBarParts: string[] = [];
+    const tooltipMarkdown = new vscode.MarkdownString('', true);
+    tooltipMarkdown.isTrusted = true;
+    tooltipMarkdown.supportThemeIcons = true;
 
-    try {
-      const snapshot = await reactor.fetchQuotaSnapshot();
-      if (snapshot.groups && snapshot.groups.length > 0) {
-        statusBarItem.text = snapshot.groups
-          .map(g => `${getStatusIcon(g.remainingFraction)} ${g.shortName}`)
-          .join('  ');
+    let worstStatusLevel = 0; // 0: high, 1: medium, 2: low, 3: critical, 4: exhausted
+    const levelToName: Record<number, string> = { 0: 'high', 1: 'medium', 2: 'low', 3: 'critical', 4: 'exhausted' };
+
+    for (const scanResult of scanResults) {
+      const reactor = new ReactorCore();
+      reactor.engage(scanResult.connectPort, scanResult.csrfToken);
+
+      try {
+        const snapshot = await reactor.fetchQuotaSnapshot();
+        if (snapshot.groups && snapshot.groups.length > 0) {
+          const groupIcons = snapshot.groups
+            .map(g => {
+              const fraction = g.remainingFraction;
+              const config = vscode.workspace.getConfiguration('antigravity-watcher');
+              const thresholds = config.get<QuotaThresholds>('thresholds') || { high: 0.8, medium: 0.3, low: 0.05, exhausted: 0 };
+              
+              let currentLevel = 3; // critical by default
+              if (fraction <= (thresholds.exhausted ?? 0)) currentLevel = 4;
+              else if (fraction > (thresholds.high ?? 0.8)) currentLevel = 0;
+              else if (fraction > (thresholds.medium ?? 0.3)) currentLevel = 1;
+              else if (fraction > (thresholds.low ?? 0.05)) currentLevel = 2;
+
+              if (currentLevel > worstStatusLevel) {
+                worstStatusLevel = currentLevel;
+              }
+
+              return `${getStatusIcon(fraction)}${g.shortName}`;
+            })
+            .join(' ');
           
-        const anyExhausted = snapshot.groups.some(g => g.isExhausted);
-        const minFraction = Math.min(...snapshot.groups.map(g => g.remainingFraction));
-        const config = vscode.workspace.getConfiguration('antigravity-watcher');
-        const thresholds = config.get<QuotaThresholds>('thresholds') || { high: 0.8, medium: 0.3, low: 0.05, exhausted: 0 };
+          statusBarParts.push(groupIcons);
+            
+          tooltipMarkdown.appendMarkdown(`### Account: ${snapshot.userInfo?.email || 'Unknown'} (${snapshot.userInfo?.tier || 'Standard'})\n`);
+          snapshot.groups.forEach(g => {
+            const icon = getStatusIcon(g.remainingFraction);
+            const percentage = (g.remainingFraction * 100).toFixed(1);
+            tooltipMarkdown.appendMarkdown(`- ${icon} **${g.groupName}**: ${percentage}%  \n    *Resets at: ${g.resetTime}*  \n`);
+            if (g.countdown) {
+              tooltipMarkdown.appendMarkdown(`    *Countdown: ${g.countdown}*  \n`);
+            }
+          });
+          tooltipMarkdown.appendMarkdown('\n---\n\n');
+        }
+      } catch (error) {
+        console.error(`Failed to fetch data for pid ${scanResult.pid}:`, error);
+      }
+    }
 
-        statusBarItem.backgroundColor = undefined;
+    if (statusBarParts.length > 0) {
+      statusBarItem.text = statusBarParts.join(' | ');
+      statusBarItem.tooltip = tooltipMarkdown;
+      
+      const worstStatus = levelToName[worstStatusLevel];
 
-
-        statusBarItem.tooltip = 'Antigravity Quotas:\n' + snapshot.groups
-          .map(g => `${g.groupName}: ${(g.remainingFraction * 100).toFixed(1)}%`)
-          .join('\n');
+      // Set background color based on worst status
+      if (worstStatusLevel === 4 || worstStatusLevel === 2) { // exhausted or low
+        statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+      } else if (worstStatusLevel === 3) { // critical
+        statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
       } else {
-        statusBarItem.text = '$(dashboard) Antigravity watcher';
         statusBarItem.backgroundColor = undefined;
       }
-    } catch (error) {
-      statusBarItem.text = '$(error) Antigravity watcher';
-      statusBarItem.tooltip = `Error fetching data: ${error}`;
+
+      // Update badge for activity bar "tab"
+      if (worstStatusLevel >= 3) { // exhausted or critical
+        chartViewProvider.setBadge({ value: 1, tooltip: `Quota ${worstStatus}` });
+      } else if (worstStatusLevel === 2) { // low
+        chartViewProvider.setBadge({ value: 1, tooltip: 'Low Quota' });
+      } else {
+        chartViewProvider.setBadge(undefined);
+      }
+    } else {
+      statusBarItem.text = '$(dashboard) Antigravity watcher';
+      statusBarItem.tooltip = 'Found Antigravity but failed to fetch data';
       statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+      chartViewProvider.setBadge(undefined);
     }
   }
+
+
 
   // Initial update
   updateStatusBar();

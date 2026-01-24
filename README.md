@@ -21,6 +21,7 @@ Stay on top of your usage with beautiful, real-time charts in the Activity Bar. 
 
 ### 🤖 Intelligent Automation
 *   **Zero-Config Discovery**: Automatically finds your running Antigravity instance—no manual port input or API key configuration needed.
+*   **Multi-Account Support**: Detects all active Antigravity processes simultaneously, allowing you to monitor quotas across multiple Google accounts in one view.
 *   **Smart Grouping**: Automatically groups models that share common tokens or request pools.
 *   **Auto-Update**: Background refresh keeps data fresh without interrupting your coding sessions.
 

@@ -21,9 +21,16 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'antigravity-watcher.chartView';
   private _view?: vscode.WebviewView;
   private _refreshInterval?: NodeJS.Timeout;
-  private _latestSnapshot?: QuotaSnapshot;
+  private _latestSnapshots: QuotaSnapshot[] = [];
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
+
+  public setBadge(badge: vscode.ViewBadge | undefined) {
+    if (this._view) {
+      this._view.badge = badge;
+    }
+  }
+
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -85,19 +92,27 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
 
     try {
       const hunter = new ProcessHunter();
-      const scanResult = await hunter.scanEnvironment(1);
+      const scanResults = await hunter.scanEnvironment(1);
 
-      if (!scanResult) {
+      if (scanResults.length === 0) {
         this._view.webview.html = this._getErrorHtml('Antigravity not found. Please make sure Antigravity is running.');
         return;
       }
 
-      const reactor = new ReactorCore();
-      reactor.engage(scanResult.connectPort, scanResult.csrfToken);
-      const snapshot = await reactor.fetchQuotaSnapshot();
+      const snapshots: QuotaSnapshot[] = [];
+      for (const scanResult of scanResults) {
+        const reactor = new ReactorCore();
+        reactor.engage(scanResult.connectPort, scanResult.csrfToken);
+        try {
+          const snapshot = await reactor.fetchQuotaSnapshot();
+          snapshots.push(snapshot);
+        } catch (error) {
+          console.error(`Failed to fetch quota for pid ${scanResult.pid}:`, error);
+        }
+      }
       
-      this._latestSnapshot = snapshot;
-      this._view.webview.html = this._getHtmlForWebview(snapshot);
+      this._latestSnapshots = snapshots;
+      this._view.webview.html = this._getHtmlForWebview(snapshots);
     } catch (error) {
       this._view.webview.html = this._getErrorHtml(`Failed to fetch quota data: ${error}`);
     }
@@ -199,19 +214,78 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
     </html>`;
   }
 
-  private _getHtmlForWebview(snapshot: QuotaSnapshot): string {
-    const groups = snapshot.groups || [];
-    
-    // Prepare chart data
-    const chartData: QuotaChartData[] = groups.map(g => ({
-      name: g.groupName,
-      shortName: g.shortName,
-      remaining: g.remainingFraction * 100,
-      used: (1 - g.remainingFraction) * 100,
-      resetTime: g.resetTime,
-      countdown: g.countdown || 'N/A',
-      isExhausted: g.isExhausted
-    }));
+  private _getHtmlForWebview(snapshots: QuotaSnapshot[]): string {
+    const config = vscode.workspace.getConfiguration('antigravity-watcher');
+    const thresholds = config.get<any>('thresholds') || { high: 0.8, medium: 0.3, low: 0.05, exhausted: 0 };
+
+    const sections = snapshots.map(snapshot => {
+      const groups = snapshot.groups || [];
+      const chartData: QuotaChartData[] = groups.map(g => ({
+        name: g.groupName,
+        shortName: g.shortName,
+        remaining: g.remainingFraction * 100,
+        used: (1 - g.remainingFraction) * 100,
+        resetTime: g.resetTime,
+        countdown: g.countdown || 'N/A',
+        isExhausted: g.isExhausted
+      }));
+
+      return `
+        <div class="account-section">
+          <div class="user-info">
+            <strong>${snapshot.userInfo?.email || 'Unknown'}</strong> • ${snapshot.userInfo?.tier || 'Standard'}
+          </div>
+          <div class="quota-groups">
+            ${chartData.map(data => {
+              const fraction = data.remaining / 100;
+              let percentageClass = 'percentage-high';
+              let barClass = 'bar-high';
+              let displayPercentage = data.remaining.toFixed(1) + '%';
+
+              if (fraction <= (thresholds.exhausted ?? 0)) {
+                percentageClass = 'percentage-exhausted';
+                barClass = 'bar-exhausted';
+                displayPercentage = 'OUT OF QUOTA';
+              } else if (fraction > (thresholds.high ?? 0.8)) {
+                percentageClass = 'percentage-high';
+                barClass = 'bar-high';
+              } else if (fraction > (thresholds.medium ?? 0.3)) {
+                percentageClass = 'percentage-medium';
+                barClass = 'bar-medium';
+              } else if (fraction > (thresholds.low ?? 0.05)) {
+                percentageClass = 'percentage-low';
+                barClass = 'bar-low';
+              } else {
+                percentageClass = 'percentage-critical';
+                barClass = 'bar-critical';
+              }
+              
+              return `
+                <div class="quota-group">
+                  <div class="group-header">
+                    <div class="group-name">${data.name}</div>
+                    <div class="group-percentage ${percentageClass}">${displayPercentage}</div>
+                  </div>
+                  <div class="chart-container">
+                    <div class="bar-chart">
+                      <div class="bar-fill ${barClass}" style="width: ${data.remaining}%"></div>
+                    </div>
+                  </div>
+                  <div class="reset-info">
+                    <div class="reset-label">⏰ Resets at:</div>
+                    <div class="reset-time">
+                      ${data.resetTime}
+                      <span class="countdown">${data.countdown}</span>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+        </div>
+      `;
+    }).join('<hr class="account-separator">');
 
     return `<!DOCTYPE html>
     <html lang="en">
@@ -220,11 +294,18 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Antigravity Watcher</title>
       <style>
+        :root {
+          --threshold-high: ${thresholds.high * 100};
+          --threshold-medium: ${thresholds.medium * 100};
+          --threshold-low: ${thresholds.low * 100};
+          --threshold-exhausted: ${thresholds.exhausted * 100};
+        }
         * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
         }
+
         body {
           font-family: var(--vscode-font-family);
           padding: 16px;
@@ -235,33 +316,46 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
           margin-bottom: 20px;
           padding-bottom: 12px;
           border-bottom: 1px solid var(--vscode-panel-border);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
         }
         .header h2 {
           font-size: 16px;
           font-weight: 600;
-          margin-bottom: 8px;
-        }
-        .user-info {
-          font-size: 12px;
-          color: var(--vscode-descriptionForeground);
         }
         .refresh-btn {
           background-color: var(--vscode-button-background);
           color: var(--vscode-button-foreground);
           border: none;
-          padding: 6px 12px;
+          padding: 4px 8px;
           border-radius: 4px;
           cursor: pointer;
           font-family: var(--vscode-font-family);
-          font-size: 12px;
-          margin-top: 8px;
-          width: 100%;
+          font-size: 11px;
         }
         .refresh-btn:hover {
           background-color: var(--vscode-button-hoverBackground);
         }
-        .quota-group {
+        .account-section {
           margin-bottom: 24px;
+        }
+        .account-separator {
+          border: 0;
+          border-top: 1px solid var(--vscode-panel-border);
+          margin: 24px 0;
+        }
+        .user-info {
+          font-size: 12px;
+          margin-bottom: 12px;
+          color: var(--vscode-descriptionForeground);
+          background-color: var(--vscode-editor-background);
+          padding: 4px 8px;
+          border-radius: 4px;
+          border-left: 3px solid var(--vscode-button-background);
+        }
+        .quota-group {
+          margin-bottom: 16px;
           padding: 12px;
           background-color: var(--vscode-sideBar-background);
           border-radius: 6px;
@@ -275,115 +369,85 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
         }
         .group-name {
           font-weight: 600;
-          font-size: 13px;
+          font-size: 12px;
         }
         .group-percentage {
-          font-size: 18px;
+          font-size: 14px;
           font-weight: 700;
         }
         .percentage-high { color: #4caf50; }
         .percentage-medium { color: #ff9800; }
-        .percentage-low { color: #f44336; }
-        .percentage-exhausted { color: #f44336; font-weight: 700; }
+        .percentage-low { color: #ff5722; }
+        .percentage-critical { color: #f44336; }
+        .percentage-exhausted { color: #666666; font-weight: 700; }
+
 
         .chart-container {
-          margin: 12px 0;
+          margin: 8px 0;
         }
         .bar-chart {
           width: 100%;
-          height: 24px;
+          height: 12px;
           background-color: var(--vscode-input-background);
-          border-radius: 12px;
+          border-radius: 6px;
           overflow: hidden;
           position: relative;
         }
         .bar-fill {
           height: 100%;
           transition: width 0.3s ease;
-          border-radius: 12px;
         }
-        .bar-high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
-        .bar-medium { background: linear-gradient(90deg, #ff9800, #ffa726); }
-        .bar-low { background: linear-gradient(90deg, #f44336, #ef5350); }
-        .bar-exhausted { background: #444444; }
+        .bar-high { background-color: #4caf50; }
+        .bar-medium { background-color: #ff9800; }
+        .bar-low { background-color: #ff5722; }
+        .bar-critical { background-color: #f44336; }
+        .bar-exhausted { background-color: #666666; }
+
+        
         .reset-info {
           margin-top: 8px;
-          padding: 8px;
-          background-color: var(--vscode-input-background);
-          border-radius: 4px;
-          font-size: 11px;
+          font-size: 10px;
         }
         .reset-label {
           color: var(--vscode-descriptionForeground);
-          margin-bottom: 4px;
         }
         .reset-time {
-          font-weight: 600;
+          font-weight: 500;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
+          flex-wrap: wrap;
         }
         .countdown {
           display: inline-block;
-          padding: 2px 8px;
+          padding: 1px 4px;
           background-color: var(--vscode-badge-background);
           color: var(--vscode-badge-foreground);
-          border-radius: 10px;
-          font-size: 10px;
-          font-weight: 600;
+          border-radius: 4px;
+          font-size: 9px;
         }
         .last-updated {
           text-align: center;
-          font-size: 11px;
+          font-size: 10px;
           color: var(--vscode-descriptionForeground);
           margin-top: 20px;
-          padding-top: 12px;
+          padding-top: 10px;
           border-top: 1px solid var(--vscode-panel-border);
         }
       </style>
     </head>
     <body>
       <div class="header">
-        <h2>📊 Quota Usage</h2>
-        <div class="user-info">${snapshot.userInfo?.email || 'User'} • ${snapshot.userInfo?.tier || 'Standard'}</div>
+        <h2>📊 Quotas</h2>
         <button class="refresh-btn" onclick="refresh()">🔄 Refresh</button>
       </div>
 
-      <div class="quota-groups">
-        ${chartData.map(data => {
-          const percentageClass = data.isExhausted ? 'percentage-exhausted' :
-                                  data.remaining > 50 ? 'percentage-high' : 
-                                  data.remaining > 20 ? 'percentage-medium' : 'percentage-low';
-          const barClass = data.isExhausted ? 'bar-exhausted' :
-                          data.remaining > 50 ? 'bar-high' : 
-                          data.remaining > 20 ? 'bar-medium' : 'bar-low';
-          const displayPercentage = data.isExhausted ? 'OUT OF QUOTA' : data.remaining.toFixed(1) + '%';
-          
-          return `
-            <div class="quota-group">
-              <div class="group-header">
-                <div class="group-name">${data.name}</div>
-                <div class="group-percentage ${percentageClass}">${displayPercentage}</div>
-              </div>
-              <div class="chart-container">
-                <div class="bar-chart">
-                  <div class="bar-fill ${barClass}" style="width: ${data.remaining}%"></div>
-                </div>
-              </div>
-              <div class="reset-info">
-                <div class="reset-label">⏰ Resets at:</div>
-                <div class="reset-time">
-                  ${data.resetTime}
-                  <span class="countdown">${data.countdown}</span>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('')}
+      <div class="content">
+        ${sections}
       </div>
 
       <div class="last-updated">
-        Last updated: ${new Date().toLocaleTimeString()}
+        Updated: ${new Date().toLocaleTimeString()}
       </div>
 
       <script>

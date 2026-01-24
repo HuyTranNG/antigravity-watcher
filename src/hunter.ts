@@ -45,20 +45,30 @@ export class ProcessHunter {
     }
   }
 
-  async scanEnvironment(maxAttempts: number = 3): Promise<EnvironmentScanResult | null> {
+  async scanEnvironment(maxAttempts: number = 3): Promise<EnvironmentScanResult[]> {
+    const results: EnvironmentScanResult[] = [];
+    const seenPids = new Set<number>();
+
     for (let i = 0; i < maxAttempts; i++) {
       try {
         const candidates = await this.findProcesses();
         
         // Verify each candidate by finding its actual listening port
         for (const candidate of candidates) {
+          if (seenPids.has(candidate.pid)) continue;
+
           const result = await this.verifyAndConnect(candidate);
           if (result) {
-            return result;
+            results.push(result);
+            seenPids.add(candidate.pid);
           }
         }
       } catch (error) {
         console.error(`Attempt ${i + 1} failed:`, error);
+      }
+
+      if (results.length > 0) {
+        break; // If we found at least one, we can stop or continue if we want to be thorough
       }
 
       if (i < maxAttempts - 1) {
@@ -66,7 +76,7 @@ export class ProcessHunter {
       }
     }
 
-    return null;
+    return results;
   }
 
   private async verifyAndConnect(info: ProcessInfo): Promise<EnvironmentScanResult | null> {
