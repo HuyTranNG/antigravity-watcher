@@ -44,7 +44,8 @@ export function activate(context: vscode.ExtensionContext) {
 
       const allItems: string[] = [];
 
-      for (const scanResult of scanResults) {
+      if (scanResults.length > 0) {
+        const scanResult = scanResults[0];
         const reactor = new ReactorCore();
         reactor.engage(scanResult.connectPort, scanResult.csrfToken);
 
@@ -78,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
       const detail = allItems.join('\n');
       
       vscode.window.showInformationMessage(
-        `Antigravity watcher Quota (Found ${scanResults.length} accounts)`,
+        `Antigravity watcher Quota (Found ${scanResults.length > 0 ? 1 : 0} account)`,
         { modal: true, detail }
       );
 
@@ -135,7 +136,8 @@ export function activate(context: vscode.ExtensionContext) {
     let worstStatusLevel = 0; // 0: high, 1: medium, 2: low, 3: critical, 4: exhausted
     const levelToName: Record<number, string> = { 0: 'high', 1: 'medium', 2: 'low', 3: 'critical', 4: 'exhausted' };
 
-    for (const scanResult of scanResults) {
+    if (scanResults.length > 0) {
+      const scanResult = scanResults[0];
       const reactor = new ReactorCore();
       reactor.engage(scanResult.connectPort, scanResult.csrfToken);
 

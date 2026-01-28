@@ -100,7 +100,9 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
       }
 
       const snapshots: QuotaSnapshot[] = [];
-      for (const scanResult of scanResults) {
+
+      if (scanResults.length > 0) {
+        const scanResult = scanResults[0];
         const reactor = new ReactorCore();
         reactor.engage(scanResult.connectPort, scanResult.csrfToken);
         try {
