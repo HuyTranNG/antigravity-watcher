@@ -1,7 +1,8 @@
 {
   "name": "antigravity-watcher",
   "displayName": "Antigravity Watcher",
-  "version": "1.0.1",
+  "icon": "resources/app-icon.png",
+  "version": "1.0.2",
   "description": "Fetch Antigravity usage and quota information",
   "publisher": "htng-dev",
   "license": "MIT",
@@ -66,7 +67,7 @@
         {
           "id": "antigravity-watcher",
           "title": "Antigravity Watcher",
-          "icon": "resources/icon.svg"
+          "icon": "resources/tab-icon.svg"
         }
       ]
     },
@@ -76,7 +77,7 @@
           "type": "webview",
           "id": "antigravity-watcher.chartView",
           "name": "Quota Charts",
-          "icon": "resources/icon.svg"
+          "icon": "resources/tab-icon.svg"
         }
       ]
     }
