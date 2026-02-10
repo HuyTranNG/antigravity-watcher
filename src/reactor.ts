@@ -200,20 +200,16 @@ export class ReactorCore {
       });
     }
 
-    // Sort models according to the order in the image
-    const MODEL_PRIORITY: Record<string, number> = {
-      "Gemini 3 Pro (High)": 1,
-      "Gemini 3 Pro (Low)": 2,
-      "Gemini 3 Flash": 3,
-      "Claude Sonnet 4.5": 4,
-      "Claude Sonnet 4.5 (Thinking)": 5,
-      "Claude Opus 4.5 (Thinking)": 6,
-      "GPT-OSS 120B (Medium)": 7,
-    };
+    // Build model groups dynamically
+    // Models starting with "Claude" or "GPT" are auto-grouped into "Claude-GPT"
+    const claudeGptModels = models
+      .filter(m => m.displayName.startsWith("Claude") || m.displayName.startsWith("GPT"))
+      .map(m => m.displayName);
+
     const MODEL_GROUPS: Record<string, string[]> = {
       "Gemini 3 Pro": ["Gemini 3 Pro (High)", "Gemini 3 Pro (Low)"],
       "Gemini 3 Flash": ["Gemini 3 Flash"],
-      "Claude-GPT": ["Claude Sonnet 4.5", "Claude Sonnet 4.5 (Thinking)", "Claude Opus 4.5 (Thinking)", "GPT-OSS 120B (Medium)"],
+      ...(claudeGptModels.length > 0 ? { "Claude-GPT": claudeGptModels } : {}),
     };
     const GROUP_SHORT_NAMES: Record<string, string> = {
       "Gemini 3 Pro": "G3P",
@@ -221,11 +217,13 @@ export class ReactorCore {
       "Claude-GPT": "CG",
     };
 
-    models.sort((a, b) => {
-      const pA = MODEL_PRIORITY[a.displayName] || 999;
-      const pB = MODEL_PRIORITY[b.displayName] || 999;
-      return pA - pB;
-    });
+    // Sort models by group order
+    const groupNames = Object.keys(MODEL_GROUPS);
+    const getGroupIndex = (displayName: string) => {
+      const idx = groupNames.findIndex(g => MODEL_GROUPS[g].includes(displayName));
+      return idx === -1 ? groupNames.length : idx;
+    };
+    models.sort((a, b) => getGroupIndex(a.displayName) - getGroupIndex(b.displayName));
 
     // Group models using MODEL_GROUPS
     const groups: QuotaGroup[] = [];
