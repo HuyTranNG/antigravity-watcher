@@ -5,6 +5,15 @@ All notable changes to the "antigravity-watcher" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-02-10
+
+### Added
+- **Claude Opus 4.6 Support**: Added support for the newly released Claude Opus 4.6 model.
+
+### Changed
+- **Dynamic Model Grouping**: Claude and GPT models are now auto-grouped dynamically based on their display name prefix, eliminating the need to manually update the group list when new models are added.
+- **Dynamic Sort Order**: Model sorting is now derived from group definitions instead of a hardcoded priority map, making it automatically adapt to new models.
+
 ## [1.0.3] - 2026-01-28
 
 ### Changed

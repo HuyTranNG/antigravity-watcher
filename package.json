@@ -2,7 +2,7 @@
   "name": "antigravity-watcher",
   "displayName": "Antigravity Watcher",
   "icon": "resources/app-icon.png",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Fetch Antigravity usage and quota information",
   "publisher": "htng-dev",
   "license": "MIT",
