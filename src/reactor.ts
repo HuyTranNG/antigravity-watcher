@@ -201,19 +201,32 @@ export class ReactorCore {
     }
 
     // Build model groups dynamically
-    // Models starting with "Claude" or "GPT" are auto-grouped into "Claude-GPT"
+    const geminiProModels = models
+      .filter(m => {
+        const name = m.displayName.toLowerCase();
+        return name.includes("gemini") && name.includes("pro");
+      })
+      .map(m => m.displayName);
+
+    const geminiFlashModels = models
+      .filter(m => {
+        const name = m.displayName.toLowerCase();
+        return name.includes("gemini") && name.includes("flash");
+      })
+      .map(m => m.displayName);
+
     const claudeGptModels = models
       .filter(m => m.displayName.startsWith("Claude") || m.displayName.startsWith("GPT"))
       .map(m => m.displayName);
 
     const MODEL_GROUPS: Record<string, string[]> = {
-      "Gemini 3 Pro": ["Gemini 3 Pro (High)", "Gemini 3 Pro (Low)"],
-      "Gemini 3 Flash": ["Gemini 3 Flash"],
+      ...(geminiProModels.length > 0 ? { "Gemini Pro": geminiProModels } : {}),
+      ...(geminiFlashModels.length > 0 ? { "Gemini Flash": geminiFlashModels } : {}),
       ...(claudeGptModels.length > 0 ? { "Claude-GPT": claudeGptModels } : {}),
     };
     const GROUP_SHORT_NAMES: Record<string, string> = {
-      "Gemini 3 Pro": "G3P",
-      "Gemini 3 Flash": "G3F",
+      "Gemini Pro": "GP",
+      "Gemini Flash": "GF",
       "Claude-GPT": "CG",
     };
 

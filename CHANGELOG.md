@@ -5,6 +5,11 @@ All notable changes to the "antigravity-watcher" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-02-24
+
+### Changed
+- **Gemini 3 Branding**: Updated model grouping to explicitly support "Gemini 3 Pro" and "Gemini 3 Flash" with new "G3P" and "G3F" short names.
+
 ## [1.0.4] - 2026-02-10
 
 ### Added
