@@ -10,6 +10,14 @@ async function main() {
   console.log('🚀 Antigravity watcher Usage Fetcher');
   console.log('============================\n');
 
+  // Handle command line arguments
+  const args = process.argv.slice(2);
+  const enableRetry = !args.includes('--no-retry');
+
+  if (!enableRetry) {
+    console.log('⚠️ Automatic retry disabled via --no-retry flag\n');
+  }
+
   // Step 1: Find Antigravity process
   console.log('🔍 Scanning for Antigravity process...');
   const hunter = new ProcessHunter();
@@ -35,7 +43,12 @@ async function main() {
     reactor.engage(scanResult.connectPort, scanResult.csrfToken);
 
     try {
-      const snapshot = await reactor.fetchQuotaSnapshot();
+      const snapshot = await reactor.fetchQuotaSnapshot({ 
+        enableRetry,
+        onRetry: (attempt, delayMs) => {
+          console.log(`   🔄 Antigravity is busy. Retrying (${attempt}/5) in ${delayMs / 1000}s...`);
+        }
+      });
       
       console.log('✅ Successfully fetched quota data\n');
       console.log('📊 Quota Information:');

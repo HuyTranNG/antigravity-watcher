@@ -50,7 +50,9 @@ export function activate(context: vscode.ExtensionContext) {
         reactor.engage(scanResult.connectPort, scanResult.csrfToken);
 
         try {
-          const snapshot = await reactor.fetchQuotaSnapshot();
+          const config = vscode.workspace.getConfiguration('antigravity-watcher');
+          const enableRetry = config.get<boolean>('enableRetry', true);
+          const snapshot = await reactor.fetchQuotaSnapshot({ enableRetry });
           const accountHeader = `--- Account: ${snapshot.userInfo?.email || 'Unknown'} (${snapshot.userInfo?.tier || 'Standard'}) ---`;
           allItems.push(accountHeader);
 
@@ -142,10 +144,16 @@ export function activate(context: vscode.ExtensionContext) {
       reactor.engage(scanResult.connectPort, scanResult.csrfToken);
 
       try {
-        const snapshot = await reactor.fetchQuotaSnapshot((attempt, delayMs) => {
-          statusBarItem.text = `$(sync~spin) Retrying (${attempt}/5) in ${delayMs / 1000}s...`;
-          statusBarItem.tooltip = `Antigravity is busy. Retrying (Attempt ${attempt}/5) in ${delayMs / 1000} seconds...`;
-          statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+        const config = vscode.workspace.getConfiguration('antigravity-watcher');
+        const enableRetry = config.get<boolean>('enableRetry', true);
+
+        const snapshot = await reactor.fetchQuotaSnapshot({
+          enableRetry,
+          onRetry: (attempt, delayMs) => {
+            statusBarItem.text = `$(sync~spin) Retrying (${attempt}/5) in ${delayMs / 1000}s...`;
+            statusBarItem.tooltip = `Antigravity is busy. Retrying (Attempt ${attempt}/5) in ${delayMs / 1000} seconds...`;
+            statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+          }
         });
 
         if (snapshot.groups && snapshot.groups.length > 0) {

@@ -106,9 +106,15 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
         const reactor = new ReactorCore();
         reactor.engage(scanResult.connectPort, scanResult.csrfToken);
         try {
-          const snapshot = await reactor.fetchQuotaSnapshot((attempt, delayMs) => {
-            if (this._view) {
-              this._view.webview.html = this._getRetryingHtml(attempt, delayMs);
+          const config = vscode.workspace.getConfiguration('antigravity-watcher');
+          const enableRetry = config.get<boolean>('enableRetry', true);
+
+          const snapshot = await reactor.fetchQuotaSnapshot({
+            enableRetry,
+            onRetry: (attempt, delayMs) => {
+              if (this._view) {
+                this._view.webview.html = this._getRetryingHtml(attempt, delayMs);
+              }
             }
           });
           snapshots.push(snapshot);
