@@ -22,14 +22,14 @@ Provides immediate, actionable visibility into model quotas to prevent unexpecte
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Implement exponential backoff in ReactorCore — v1.0
+- ✓ Add retry limit (5 attempts) — v1.0
+- ✓ Update UI (Status Bar/Webview) to show retry progress — v1.0
+- ✓ Detect "Our servers are experiencing high traffic..." error — v1.0
 
 ### Active
 
-- [ ] Implement exponential backoff in ReactorCore
-- [ ] Add retry limit (5 attempts)
-- [ ] Update UI (Status Bar/Webview) to show retry progress
-- [ ] Detect "Our servers are experiencing high traffic..." error
+(None currently)
 
 ### Out of Scope
 
