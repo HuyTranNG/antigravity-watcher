@@ -92,6 +92,11 @@ interface ServerUserStatusResponse {
   };
 }
 
+export interface FetchOptions {
+  enableRetry?: boolean;
+  onRetry?: (attempt: number, delayMs: number) => void;
+}
+
 export class ReactorCore {
   private port: number = 0;
   private token: string = '';
@@ -101,11 +106,13 @@ export class ReactorCore {
     this.token = token;
   }
 
-  async fetchQuotaSnapshot(onRetry?: (attempt: number, delayMs: number) => void): Promise<QuotaSnapshot> {
+  async fetchQuotaSnapshot(options?: FetchOptions | ((attempt: number, delayMs: number) => void)): Promise<QuotaSnapshot> {
+    const fetchOptions: FetchOptions = typeof options === 'function' ? { onRetry: options } : (options || {});
+    
     const response = await this.transmitWithRetry<ServerUserStatusResponse>(
       '/exa.language_server_pb.LanguageServerService/GetUserStatus',
       {},
-      onRetry
+      fetchOptions
     );
 
     return this.processResponse(response);
@@ -114,10 +121,10 @@ export class ReactorCore {
   private async transmitWithRetry<T>(
     endpoint: string,
     payload: object,
-    onRetry?: (attempt: number, delayMs: number) => void
+    options?: FetchOptions
   ): Promise<T> {
     let attempt = 0;
-    const maxRetries = 5;
+    const maxRetries = options?.enableRetry !== false ? 5 : 0;
 
     while (true) {
       try {
@@ -126,8 +133,8 @@ export class ReactorCore {
         if (error instanceof HighTrafficError && attempt < maxRetries) {
           attempt++;
           const delayMs = Math.pow(2, attempt) * 1000;
-          if (onRetry) {
-            onRetry(attempt, delayMs);
+          if (options?.onRetry) {
+            options.onRetry(attempt, delayMs);
           }
           await this.sleep(delayMs);
           continue;
