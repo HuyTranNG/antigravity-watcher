@@ -36,18 +36,18 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RETRY-01 | TBD | Pending |
-| RETRY-02 | TBD | Pending |
-| RETRY-03 | TBD | Pending |
-| RETRY-04 | TBD | Pending |
-| UI-01 | TBD | Pending |
-| UI-02 | TBD | Pending |
-| UI-03 | TBD | Pending |
+| RETRY-01 | Phase 1 | Pending |
+| RETRY-02 | Phase 1 | Pending |
+| RETRY-03 | Phase 2 | Pending |
+| RETRY-04 | Phase 2 | Pending |
+| UI-01 | Phase 3 | Pending |
+| UI-02 | Phase 3 | Pending |
+| UI-03 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 7 total
-- Mapped to phases: 0
-- Unmapped: 7 ⚠️
+- Mapped to phases: 7
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2025-02-13*
