@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ProcessHunter } from './hunter';
-import { ReactorCore } from './reactor';
+import { ReactorCore, HighTrafficError } from './reactor';
 import { ChartViewProvider } from './chartView';
 
 interface QuotaThresholds {
@@ -142,7 +142,12 @@ export function activate(context: vscode.ExtensionContext) {
       reactor.engage(scanResult.connectPort, scanResult.csrfToken);
 
       try {
-        const snapshot = await reactor.fetchQuotaSnapshot();
+        const snapshot = await reactor.fetchQuotaSnapshot((attempt, delayMs) => {
+          statusBarItem.text = `$(sync~spin) Retrying (${attempt}/5) in ${delayMs / 1000}s...`;
+          statusBarItem.tooltip = `Antigravity is busy. Retrying (Attempt ${attempt}/5) in ${delayMs / 1000} seconds...`;
+          statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+        });
+
         if (snapshot.groups && snapshot.groups.length > 0) {
           const groupIcons = snapshot.groups
             .map(g => {
@@ -178,6 +183,12 @@ export function activate(context: vscode.ExtensionContext) {
           tooltipMarkdown.appendMarkdown('\n---\n\n');
         }
       } catch (error) {
+        if (error instanceof HighTrafficError) {
+          statusBarItem.text = `$(warning) High Traffic (Failed after retries)`;
+          statusBarItem.tooltip = 'Antigravity servers are experiencing high traffic. Auto-retry failed after 5 attempts.';
+          statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+          return;
+        }
         console.error(`Failed to fetch data for pid ${scanResult.pid}:`, error);
       }
     }

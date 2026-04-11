@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ProcessHunter } from './hunter';
-import { ReactorCore, QuotaSnapshot } from './reactor';
+import { ReactorCore, QuotaSnapshot, HighTrafficError } from './reactor';
 
 interface WebviewMessage {
   type: string;
@@ -106,9 +106,17 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
         const reactor = new ReactorCore();
         reactor.engage(scanResult.connectPort, scanResult.csrfToken);
         try {
-          const snapshot = await reactor.fetchQuotaSnapshot();
+          const snapshot = await reactor.fetchQuotaSnapshot((attempt, delayMs) => {
+            if (this._view) {
+              this._view.webview.html = this._getRetryingHtml(attempt, delayMs);
+            }
+          });
           snapshots.push(snapshot);
         } catch (error) {
+          if (error instanceof HighTrafficError) {
+            this._view.webview.html = this._getErrorHtml('Antigravity servers are experiencing high traffic. Auto-retry failed after 5 attempts.');
+            return;
+          }
           console.error(`Failed to fetch quota for pid ${scanResult.pid}:`, error);
         }
       }
@@ -160,6 +168,60 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
       <div class="loading">
         <div class="spinner"></div>
         <p>Loading quota data...</p>
+      </div>
+    </body>
+    </html>`;
+  }
+
+  private _getRetryingHtml(attempt: number, delayMs: number): string {
+    return `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Antigravity Watcher</title>
+      <style>
+        body {
+          font-family: var(--vscode-font-family);
+          padding: 20px;
+          color: var(--vscode-foreground);
+          background-color: var(--vscode-editor-background);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+        }
+        .loading {
+          text-align: center;
+        }
+        .spinner {
+          border: 3px solid var(--vscode-progressBar-background);
+          border-top: 3px solid var(--vscode-progressBar-foreground);
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 20px;
+        }
+        .badge {
+          background-color: var(--vscode-badge-background);
+          color: var(--vscode-badge-foreground);
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: bold;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="loading">
+        <div class="spinner"></div>
+        <p><strong>Antigravity is busy</strong></p>
+        <p>Retrying <span class="badge">${attempt}/5</span> in ${delayMs / 1000}s...</p>
       </div>
     </body>
     </html>`;
