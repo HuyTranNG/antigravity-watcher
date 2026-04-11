@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2025-02-13)
 
 **Core value:** Provides immediate, actionable visibility into model quotas to prevent unexpected usage limits.
-**Current focus:** Milestone v1.0 Completed
+**Current focus:** Phase 5: Configuration & Versioning
 
 ## Current Position
 
-Phase: Completed
-Plan: Milestone v1.0: Auto-retry for High Traffic Errors
-Status: Finished
-Last activity: 2025-02-13 — Implemented high-traffic detection, exponential backoff, and UI progress feedback.
+Phase: 05-configuration-versioning
+Plan: 05-01: Implementation of Configuration & Retry Logic
+Status: In Progress
+Last activity: 2025-02-24 — Created phase 5 plan to implement retry toggle and upgrade version.
 
-Progress: [██████████] 100%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -31,9 +31,10 @@ Progress: [██████████] 100%
 | 2. Exponential Backoff Core | 2/2 | Completed | 2025-02-13 |
 | 3. UI Feedback & Progress | 2/2 | Completed | 2025-02-13 |
 | 4. Validation & Edge Cases | 2/2 | Completed | 2025-02-13 |
+| 5. Configuration & Versioning | 0/2 | In Progress | - |
 
 **Recent Trend:**
-- Milestone v1.0 delivered end-to-end.
+- Moving into release stabilization and user configuration.
 
 *Updated after each milestone completion*
 
@@ -43,10 +44,11 @@ Progress: [██████████] 100%
 
 - [v1.0]: Exponential backoff (2^n) with 5 max retries.
 - [v1.0]: Detection via 429 and response body text matching.
+- [v1.0.6]: Expose retry mechanism via `antigravity-watcher.enableRetry` setting.
 
 ### Pending Todos
 
-- Consider making retry count configurable in v2.
+- None.
 
 ### Blockers/Concerns
 
@@ -54,6 +56,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2025-02-13
-Stopped at: Completed all phases of Milestone v1.0.
-Resume file: None
+Last session: 2025-02-24
+Stopped at: Created Phase 5 plan.
+Resume file: .planning/phases/05-configuration-versioning/05-01-PLAN.md
