@@ -6,6 +6,13 @@ import { IncomingMessage } from 'http';
  * Communicates with Antigravity API to fetch quota data
  */
 
+export class HighTrafficError extends Error {
+  constructor(message: string = 'Our servers are experiencing high traffic right now, please try again in a minute') {
+    super(message);
+    this.name = 'HighTrafficError';
+  }
+}
+
 export interface UserInfo {
   email?: string;
   tier?: string;
@@ -133,8 +140,18 @@ export class ReactorCore {
         let body = '';
         res.on('data', (chunk: Buffer | string) => (body += chunk));
         res.on('end', () => {
+          if (res.statusCode === 429) {
+            reject(new HighTrafficError());
+            return;
+          }
+
           if (!body || body.trim().length === 0) {
             reject(new Error('Empty response from server'));
+            return;
+          }
+
+          if (body.includes('Our servers are experiencing high traffic right now, please try again in a minute')) {
+            reject(new HighTrafficError());
             return;
           }
 
