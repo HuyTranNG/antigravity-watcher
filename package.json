@@ -59,6 +59,11 @@
             "exhausted": "⚠️"
           },
           "description": "Icons representing different remaining fraction levels."
+        },
+        "antigravity-watcher.enableRetry": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic retry with exponential backoff when Antigravity servers are experiencing high traffic (429 errors)."
         }
       }
     },
