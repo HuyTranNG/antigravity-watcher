@@ -1,30 +1,54 @@
 # Requirements: Antigravity Watcher
 
-## 1. Functional Requirements
+**Defined:** 2025-02-13
+**Core Value:** Provides immediate, actionable visibility into model quotas to prevent unexpected usage limits.
 
-### 1.1 Quota Monitoring
-- **FR-1**: The extension MUST fetch quota usage data from local Antigravity instances.
-- **FR-2**: The extension MUST support monitoring for Gemini, Claude, GPT, and Mistral model groups.
-- **FR-3**: The extension MUST display usage percentages and reset countdowns.
+## v1 Requirements (Milestone v1.0)
 
-### 1.2 Visualizations
-- **FR-4**: Provide a Webview-based dashboard in the Activity Bar.
-- **FR-5**: Provide a Status Bar item with real-time health indicators (Healthy, Warning, Low, Critical).
+### API Reliability
 
-### 1.3 Discovery & Automation
-- **FR-6**: Automatically discover running Antigravity processes without manual configuration.
-- **FR-7**: Support multiple Antigravity processes/accounts simultaneously.
-- **FR-8**: Periodically refresh data in the background (default: every 2 minutes).
+- [ ] **RETRY-01**: Detect "High Traffic" error via HTTP 429 status code.
+- [ ] **RETRY-02**: Detect "High Traffic" error via text match in response body: "Our servers are experiencing high traffic right now, please try again in a minute".
+- [ ] **RETRY-03**: Implement exponential backoff (e.g., 2^n * 1000ms) for retries.
+- [ ] **RETRY-04**: Limit retry attempts to exactly 5 before reporting a final failure.
 
-## 2. Non-Functional Requirements
+### UI / UX
 
-### 2.1 Performance
-- **NFR-1**: Data fetching and processing MUST NOT block the VS Code main thread.
-- **NFR-2**: Memory usage SHOULD be minimal as it runs in the background.
+- [ ] **UI-01**: Display a countdown or progress indicator when a retry is in progress.
+- [ ] **UI-02**: Show a distinct "Retrying..." state in the Status Bar.
+- [ ] **UI-03**: Allow the user to see how many retry attempts have been made.
 
-### 2.2 Usability
-- **NFR-3**: Zero-configuration setup for most users.
-- **NFR-4**: UI SHOULD match the VS Code aesthetic (e.g., glassmorphism, native color themes).
+## v2 Requirements
 
-### 2.3 Reliability
-- **NFR-5**: Gracefully handle cases where Antigravity is not running or the API is unreachable.
+### Configuration
+
+- **CONF-01**: Allow user to configure max retry count in settings.
+- **CONF-02**: Allow user to disable auto-retry.
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Retrying 401/403 errors | These require token refresh or re-auth, not just waiting. |
+| Global Rate Limiting | The server already handles this; we only handle its feedback. |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| RETRY-01 | TBD | Pending |
+| RETRY-02 | TBD | Pending |
+| RETRY-03 | TBD | Pending |
+| RETRY-04 | TBD | Pending |
+| UI-01 | TBD | Pending |
+| UI-02 | TBD | Pending |
+| UI-03 | TBD | Pending |
+
+**Coverage:**
+- v1 requirements: 7 total
+- Mapped to phases: 0
+- Unmapped: 7 ⚠️
+
+---
+*Requirements defined: 2025-02-13*
+*Last updated: 2025-02-13 after initiating v1.0 milestone*

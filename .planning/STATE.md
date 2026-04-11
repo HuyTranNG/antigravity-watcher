@@ -1,18 +1,18 @@
-# Project State: Antigravity Watcher
+## Current Position
 
-## Current Status
-- **Phase**: 0 (Initializing)
-- **Overall Progress**: 0%
-- **Current Focus**: Project structure and core communication.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2025-02-13 — Milestone v1.0 started
 
-## Phase 1 Progress
-- [ ] P1-T1: Project setup and core activation logic (0%)
-- [ ] P1-T2: Implement `Reactor` for Antigravity API communication (0%)
-- [ ] P1-T3: Basic data fetch and display in the Output channel (0%)
+## Accumulated Context
 
-## Active Blockers
-- None.
+### Architectural Context
+- **ReactorCore (`src/reactor.ts`)**: Handles HTTPS POST requests to the local Antigravity server. Uses `https` module.
+- **Orchestration (`src/extension.ts`)**: Manages the lifecycle and UI updates.
+- **Discovery (`src/hunter.ts`)**: Finds the Antigravity process and port.
 
-## Recent Activity
-- Initialized `.planning/` directory and project documentation.
-- Generated initial roadmap and requirements.
+### Integration Context
+- Endpoint: `/exa.language_server_pb.LanguageServerService/GetUserStatus`
+- Headers: `X-Codeium-Csrf-Token`, `Connect-Protocol-Version`.
+- Localhost only (127.0.0.1).
