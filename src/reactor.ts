@@ -101,13 +101,44 @@ export class ReactorCore {
     this.token = token;
   }
 
-  async fetchQuotaSnapshot(): Promise<QuotaSnapshot> {
-    const response = await this.transmit<ServerUserStatusResponse>(
+  async fetchQuotaSnapshot(onRetry?: (attempt: number, delayMs: number) => void): Promise<QuotaSnapshot> {
+    const response = await this.transmitWithRetry<ServerUserStatusResponse>(
       '/exa.language_server_pb.LanguageServerService/GetUserStatus',
-      {}
+      {},
+      onRetry
     );
 
     return this.processResponse(response);
+  }
+
+  private async transmitWithRetry<T>(
+    endpoint: string,
+    payload: object,
+    onRetry?: (attempt: number, delayMs: number) => void
+  ): Promise<T> {
+    let attempt = 0;
+    const maxRetries = 5;
+
+    while (true) {
+      try {
+        return await this.transmit<T>(endpoint, payload);
+      } catch (error) {
+        if (error instanceof HighTrafficError && attempt < maxRetries) {
+          attempt++;
+          const delayMs = Math.pow(2, attempt) * 1000;
+          if (onRetry) {
+            onRetry(attempt, delayMs);
+          }
+          await this.sleep(delayMs);
+          continue;
+        }
+        throw error;
+      }
+    }
+  }
+
+  private async sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async transmit<T>(endpoint: string, payload: object): Promise<T> {
