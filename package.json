@@ -29,6 +29,10 @@
       {
         "command": "antigravity-watcher.openSettings",
         "title": "Antigravity watcher: Open Settings"
+      },
+      {
+        "command": "antigravity-watcher.toggleRetry",
+        "title": "Antigravity Watcher: Toggle Retry"
       }
     ],
     "configuration": {
