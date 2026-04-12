@@ -8,69 +8,26 @@ A VS Code extension that monitors and displays Antigravity (Codeium) model quota
 
 Provides immediate, actionable visibility into model quotas to prevent unexpected usage limits and interruptions during coding sessions.
 
-## Current Milestone: v1.0 Auto-retry for High Traffic Errors
+## Current State
 
-**Goal:** Implement a robust auto-retry mechanism with exponential backoff and UI progress indicators for server congestion errors.
+- **Version:** v1.0.6
+- **Status:** Stable
+- **Key Features:** Real-time quota charts, Status Bar integration, Auto-retry for high-traffic errors, Toggle controls for resilience.
 
-**Target features:**
-- Exponential backoff strategy for retries.
-- Maximum of 5 retry attempts.
-- Progress bar or timer in the UI for retry status.
-- Detect "high traffic" errors (HTTP 429 and text match).
+## Milestone History
 
-## Requirements
+<details>
+<summary>v1.0.6 — Auto-Retry & Resilience (Archived 2026-04-12)</summary>
 
-### Validated
+Implemented a robust auto-retry mechanism with exponential backoff and UI progress indicators for server congestion errors.
+- [Roadmap Archive](milestones/v1.0.6-ROADMAP.md)
+- [Requirements Archive](milestones/v1.0.6-REQUIREMENTS.md)
+</details>
 
-- ✓ Implement exponential backoff in ReactorCore — v1.0
-- ✓ Add retry limit (5 attempts) — v1.0
-- ✓ Update UI (Status Bar/Webview) to show retry progress — v1.0
-- ✓ Detect "Our servers are experiencing high traffic..." error — v1.0
+## Next Milestone Goals
 
-### Active
-
-(None currently)
-
-### Out of Scope
-
-- Retrying other error types (e.g., auth failure, 404) — [Focus on high traffic specifically for this milestone]
-- Configuration UI for retry settings — [Hardcoded defaults for now to keep it simple]
-
-## Context
-
-- The extension interacts with a local Antigravity server (Language Server).
-- Errors like "Our servers are experiencing high traffic right now, please try again in a minute" occur during peak usage.
-- `src/reactor.ts` is the central API client.
-
-## Constraints
-
-- **Tech Stack**: TypeScript, VS Code Extension API.
-- **Performance**: Retries must not block the main thread or cause extension lag.
-- **Reliability**: Retries must have a hard limit to avoid infinite loops.
-
-## Key Decisions
-
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| Exponential Backoff | Industry standard for handling rate limits/congestion. | — Pending |
-| 5 Max Retries | Balanced approach between persistence and failure reporting. | — Pending |
-
-## Evolution
-
-This document evolves at phase transitions and milestone boundaries.
-
-**After each phase transition** (via `/gsd-transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `/gsd-complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
+- [ ] Configuration: Allow user to configure max retry count in settings.
+- [ ] UI: Enhance dashboard with historical usage trends.
 
 ---
-*Last updated: 2025-02-13 after initiating v1.0 milestone*
+*Last updated: 2026-04-12 after v1.0.6 archival*
