@@ -95,6 +95,27 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('antigravity-watcher.openSettings', () => {
     vscode.commands.executeCommand('workbench.action.openSettings', 'antigravity-watcher');
   }));
+
+  // Create retry toggle status bar item
+  const retryStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 101);
+  retryStatusBarItem.command = 'antigravity-watcher.toggleRetry';
+  context.subscriptions.push(retryStatusBarItem);
+
+  // Function to update retry status bar item
+  function updateRetryStatusBarItem() {
+    const config = vscode.workspace.getConfiguration('antigravity-watcher');
+    const enableRetry = config.get<boolean>('enableRetry', true);
+    retryStatusBarItem.text = enableRetry ? '$(sync)' : '$(sync-ignored)';
+    retryStatusBarItem.tooltip = `Toggle Auto-Retry (Current: ${enableRetry ? 'Enabled' : 'Disabled'})`;
+    retryStatusBarItem.show();
+  }
+
+  // Register toggle command
+  context.subscriptions.push(vscode.commands.registerCommand('antigravity-watcher.toggleRetry', async () => {
+    const config = vscode.workspace.getConfiguration('antigravity-watcher');
+    const currentValue = config.get<boolean>('enableRetry', true);
+    await config.update('enableRetry', !currentValue, vscode.ConfigurationTarget.Global);
+  }));
   
   // Create status bar item
   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -236,6 +257,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Initial update
   updateStatusBar();
+  updateRetryStatusBarItem();
 
   // Periodic update management
   let refreshInterval: NodeJS.Timeout | undefined;
@@ -260,6 +282,9 @@ export function activate(context: vscode.ExtensionContext) {
     }
     if (e.affectsConfiguration('antigravity-watcher.thresholds') || e.affectsConfiguration('antigravity-watcher.icons')) {
       updateStatusBar();
+    }
+    if (e.affectsConfiguration('antigravity-watcher.enableRetry')) {
+      updateRetryStatusBarItem();
     }
   }));
 
