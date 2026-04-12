@@ -58,11 +58,22 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
         case 'refresh':
           await this.updateView();
           break;
+        case 'toggleRetry':
+          await vscode.commands.executeCommand('antigravity-watcher.toggleRetry');
+          break;
+      }
+    });
+
+    // Listen for configuration changes to update the view reactively
+    const configListener = vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('antigravity-watcher.enableRetry')) {
+        this.updateView();
       }
     });
 
     // Clean up on dispose
     webviewView.onDidDispose(() => {
+      configListener.dispose();
       this.stopAutoRefresh();
     });
   }
@@ -287,6 +298,7 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
   private _getHtmlForWebview(snapshots: QuotaSnapshot[]): string {
     const config = vscode.workspace.getConfiguration('antigravity-watcher');
     const thresholds = config.get<any>('thresholds') || { high: 0.8, medium: 0.3, low: 0.05, exhausted: 0 };
+    const enableRetry = config.get<boolean>('enableRetry', true);
 
     const sections = snapshots.map(snapshot => {
       const groups = snapshot.groups || [];
@@ -389,20 +401,87 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          gap: 8px;
         }
         .header h2 {
-          font-size: 16px;
+          font-size: 14px;
           font-weight: 600;
+          white-space: nowrap;
+        }
+        .controls {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .toggle-container {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .toggle-label {
+          font-size: 10px;
+          color: var(--vscode-descriptionForeground);
+          text-transform: uppercase;
+          font-weight: bold;
+        }
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 28px;
+          height: 16px;
+        }
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: var(--vscode-settings-checkboxBackground);
+          transition: .4s;
+          border: 1px solid var(--vscode-settings-checkboxBorder);
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 10px;
+          width: 10px;
+          left: 2px;
+          bottom: 2px;
+          background-color: var(--vscode-settings-checkboxForeground);
+          transition: .4s;
+        }
+        input:checked + .slider {
+          background-color: var(--vscode-button-background);
+        }
+        input:focus + .slider {
+          box-shadow: 0 0 1px var(--vscode-button-background);
+        }
+        input:checked + .slider:before {
+          transform: translateX(12px);
+          background-color: var(--vscode-button-foreground);
+        }
+        .slider.round {
+          border-radius: 16px;
+        }
+        .slider.round:before {
+          border-radius: 50%;
         }
         .refresh-btn {
           background-color: var(--vscode-button-background);
           color: var(--vscode-button-foreground);
           border: none;
-          padding: 4px 8px;
+          padding: 4px 6px;
           border-radius: 4px;
           cursor: pointer;
           font-family: var(--vscode-font-family);
-          font-size: 11px;
+          font-size: 10px;
+          white-space: nowrap;
         }
         .refresh-btn:hover {
           background-color: var(--vscode-button-hoverBackground);
@@ -509,7 +588,16 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
     <body>
       <div class="header">
         <h2>📊 Quotas</h2>
-        <button class="refresh-btn" onclick="refresh()">🔄 Refresh</button>
+        <div class="controls">
+          <div class="toggle-container" title="Toggle Auto-Retry on High Traffic">
+            <span class="toggle-label">Retry</span>
+            <label class="switch">
+              <input type="checkbox" id="retryToggle" ${enableRetry ? 'checked' : ''} onchange="toggleRetry()">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <button class="refresh-btn" onclick="refresh()">🔄 Refresh</button>
+        </div>
       </div>
 
       <div class="content">
@@ -524,6 +612,9 @@ export class ChartViewProvider implements vscode.WebviewViewProvider {
         const vscode = acquireVsCodeApi();
         function refresh() {
           vscode.postMessage({ type: 'refresh' });
+        }
+        function toggleRetry() {
+          vscode.postMessage({ type: 'toggleRetry' });
         }
       </script>
     </body>
