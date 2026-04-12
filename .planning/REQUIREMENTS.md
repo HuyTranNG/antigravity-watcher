@@ -18,7 +18,7 @@
 - [x] **UI-02**: Show a distinct "Retrying..." state in the Status Bar.
 - [x] **UI-03**: Allow the user to see how many retry attempts have been made.
 - [x] **UI-06-01**: Provide a clickable Status Bar icon to toggle retry feature.
-- [ ] **UI-06-02**: Provide a toggle in the sidebar Webview to enable/disable retry feature.
+- [x] **UI-06-02**: Provide a toggle in the sidebar Webview to enable/disable retry feature.
 
 ## v2 Requirements
 
