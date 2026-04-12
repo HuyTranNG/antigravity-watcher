@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-04-11T17:00:00.000Z"
-last_activity: 2026-04-11 — Upgraded extension version to 1.0.6 and updated changelog.
+status: in_progress
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-04-12T13:10:00.000Z"
+last_activity: "2026-04-12 — Completed 06-01-PLAN.md"
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 5
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  total_plans: 12
+  completed_plans: 11
+  percent: 92
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2025-02-13)
 
 **Core value:** Provides immediate, actionable visibility into model quotas to prevent unexpected usage limits.
-**Current focus:** Phase 5: Configuration & Versioning (Complete)
+**Current focus:** Phase 6: UI Resilience Controls
 
 ## Current Position
 
-Phase: 05-configuration-versioning
-Plan: 05-02: Version Upgrade & Documentation
-Status: Completed
-Last activity: 2026-04-11 — Upgraded extension version to 1.0.6 and updated changelog.
+Phase: 06-ui-resilience-controls
+Plan: 06-02: Sidebar Webview Toggle
+Status: In Progress
+Last activity: 2026-04-12 — Completed 06-01-PLAN.md.
 
-Progress: [██████████] 100%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -49,14 +49,15 @@ Progress: [██████████] 100%
 | 3. UI Feedback & Progress | 2/2 | Completed | 2025-02-13 |
 | 4. Validation & Edge Cases | 2/2 | Completed | 2025-02-13 |
 | 5. Configuration & Versioning | 2/2 | Completed | 2026-04-11 |
+| 6. UI Resilience Controls | 1/2 | In Progress | 2026-04-12 |
 
 **Recent Trend:**
 
-- Released v1.0.6 with retry configuration and improved reliability.
+- Released v1.0.6 with retry configuration.
+- Now implementing UI toggles for retry feature.
 
 *Updated after each milestone completion*
-| Phase 05 P01 | 15m | 3 tasks | 5 files |
-| Phase 05 P02 | 10m | 2 tasks | 3 files |
+| Phase 06 P01 | 15m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,12 @@ Progress: [██████████] 100%
 - [v1.0.6]: Expose retry mechanism via `antigravity-watcher.enableRetry` setting.
 - [Phase 05]: Added antigravity-watcher.enableRetry setting
 - [v1.0.6]: Upgraded extension version to 1.0.6
+- [Phase 06]: Use a second, dedicated status bar item for the retry toggle (D-01).
+- [Phase 06]: Implement a `antigravity-watcher.toggleRetry` command (D-02).
+- [Phase 06]: Implement a toggle switch/button in the Webview header (D-03).
+- [Phase 06]: Use configuration change listeners for reactive UI updates (D-04).
+- [Phase 06]: Added a dedicated status bar item for toggling the retry mechanism (D-01).
+- [Phase 06]: Implemented the 'antigravity-watcher.toggleRetry' command to update global configuration (D-02).
 
 ### Pending Todos
 
@@ -78,6 +85,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-11T17:00:00.000Z
-Stopped at: Completed 05-02-PLAN.md
-Resume file: None
+Last session: 2026-04-12T13:10:00.000Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: .planning/phases/06-ui-resilience-controls/06-02-PLAN.md

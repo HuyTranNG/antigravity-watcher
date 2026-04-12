@@ -9,6 +9,7 @@
 - [x] Phase 3: UI Feedback & Progress
 - [x] Phase 4: Validation & Edge Cases
 - [x] Phase 5: Configuration & Versioning
+- [ ] Phase 6: UI Resilience Controls
 
 ## Detailed Plan
 
@@ -32,6 +33,10 @@
 - [x] **Plan 05-01**: Add `enableRetry` setting and update consumers.
 - [x] **Plan 05-02**: Upgrade version to 1.0.6 and update CHANGELOG.md.
 
+### [ ] Phase 6: UI Resilience Controls
+- [ ] **Plan 06-01**: Implement Status Bar toggle for retry feature.
+- [ ] **Plan 06-02**: Implement Sidebar Webview toggle for retry feature.
+
 ## Progress Metrics
 
 | Phase | Plans | Status | Completed |
@@ -41,8 +46,9 @@
 | Phase 3 | 2/2 | Completed | 2025-02-13 |
 | Phase 4 | 2/2 | Completed | 2025-02-13 |
 | Phase 5 | 2/2 | Completed | 2026-04-11 |
+| Phase 6 | 0/2 | In Progress | |
 
-**Total Completion: 100%**
+**Total Completion: 83.3%**
 
 ---
-*Last updated: 2026-04-11 after Phase 5 completion*
+*Last updated: 2026-04-12*

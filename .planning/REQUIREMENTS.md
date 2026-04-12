@@ -17,6 +17,8 @@
 - [x] **UI-01**: Display a countdown or progress indicator when a retry is in progress.
 - [x] **UI-02**: Show a distinct "Retrying..." state in the Status Bar.
 - [x] **UI-03**: Allow the user to see how many retry attempts have been made.
+- [x] **UI-06-01**: Provide a clickable Status Bar icon to toggle retry feature.
+- [ ] **UI-06-02**: Provide a toggle in the sidebar Webview to enable/disable retry feature.
 
 ## v2 Requirements
 
@@ -44,6 +46,8 @@
 | UI-02 | Phase 3 | Completed |
 | UI-03 | Phase 3 | Completed |
 | CONF-02 | Phase 5 | Completed |
+| UI-06-01 | Phase 6 | Completed |
+| UI-06-02 | Phase 6 | In Progress |
 
 **Coverage:**
 - v1 requirements: 7 total
