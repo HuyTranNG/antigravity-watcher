@@ -105,7 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
   function updateRetryStatusBarItem() {
     const config = vscode.workspace.getConfiguration('antigravity-watcher');
     const enableRetry = config.get<boolean>('enableRetry', true);
-    retryStatusBarItem.text = enableRetry ? '$(sync)' : '$(sync-ignored)';
+    retryStatusBarItem.text = enableRetry ? '$(sync) AR' : '$(sync-ignored) AR';
     retryStatusBarItem.tooltip = `Toggle Auto-Retry (Current: ${enableRetry ? 'Enabled' : 'Disabled'})`;
     retryStatusBarItem.show();
   }
